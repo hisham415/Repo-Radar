@@ -1,0 +1,12 @@
+node_modules
+dist
+storybook-static
+coverage
+.turbo
+.vercel
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+*.tsbuildinfo

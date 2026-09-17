@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Repo Radar — Project Walkthrough, Part 1: Structure &amp; Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+      @page {
+        size: A4;
+        margin: 18mm 16mm 20mm 16mm;
+      }
+      :root {
+        --ink: #1f2328;
+        --muted: #59636e;
+        --line: #d0d7de;
+        --accent: #1f6feb;
+        --accent-soft: #ddf4ff;
+        --code-bg: #f6f8fa;
+        --warn-soft: #fff8c5;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        color: var(--ink);
+        font:
+          11pt/1.55 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Inter,
+          Roboto,
+          sans-serif;
+      }
+      body {
+        padding: 0 4mm;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        line-height: 1.25;
+        page-break-after: avoid;
+        break-after: avoid;
+      }
+      h1 {
+        font-size: 26pt;
+        margin: 0 0 6pt;
+      }
+      h2 {
+        font-size: 17pt;
+        margin: 26pt 0 8pt;
+        padding-bottom: 4pt;
+        border-bottom: 2px solid var(--accent);
+      }
+      h3 {
+        font-size: 13pt;
+        margin: 18pt 0 6pt;
+        color: #0b3d91;
+      }
+      h4 {
+        font-size: 11.5pt;
+        margin: 12pt 0 4pt;
+      }
+      p {
+        margin: 6pt 0;
+      }
+      code {
+        font:
+          9.5pt/1.4 'SFMono-Regular',
+          Menlo,
+          Consolas,
+          monospace;
+        background: var(--code-bg);
+        border: 1px solid #e6e9ee;
+        border-radius: 4px;
+        padding: 0 3px;
+      }
+      pre {
+        background: var(--code-bg);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10pt 12pt;
+        overflow: hidden;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      pre code {
+        background: none;
+        border: 0;
+        padding: 0;
+        font-size: 9pt;
+        white-space: pre;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9.8pt;
+        margin: 8pt 0 12pt;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      th,
+      td {
+        border: 1px solid var(--line);
+        padding: 5pt 7pt;
+        vertical-align: top;
+        text-align: left;
+      }
+      th {
+        background: var(--code-bg);
+      }
+      .lead {
+        font-size: 12pt;
+        color: var(--muted);
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 9.5pt;
+        margin-top: 4pt;
+      }
+      .pattern {
+        background: var(--accent-soft);
+        border-left: 4px solid var(--accent);
+        padding: 6pt 10pt;
+        margin: 10pt 0;
+        border-radius: 0 6px 6px 0;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .pattern strong {
+        color: #0b3d91;
+      }
+      .tip {
+        background: var(--warn-soft);
+        border-left: 4px solid #d4a72c;
+        padding: 6pt 10pt;
+        margin: 10pt 0;
+        border-radius: 0 6px 6px 0;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      figure {
+        margin: 12pt 0 14pt;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        text-align: center;
+      }
+      figure img {
+        max-width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      }
+      figure.narrow img {
+        max-width: 62%;
+      }
+      figure.tiny img {
+        max-width: 48%;
+      }
+      figcaption {
+        font-size: 9.5pt;
+        color: var(--muted);
+        margin-top: 5pt;
+      }
+      .mermaid {
+        display: flex;
+        justify-content: center;
+        margin: 8pt 0 4pt;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .mermaid svg {
+        max-width: 100%;
+        height: auto;
+      }
+      .cover {
+        min-height: 92vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        page-break-after: always;
+        break-after: page;
+      }
+      .cover .stack {
+        margin-top: 18pt;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6pt;
+      }
+      .cover .stack span {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 2pt 9pt;
+        font-size: 9.5pt;
+        color: var(--muted);
+      }
+      .cover figure {
+        margin-top: 28pt;
+      }
+      .toc ol {
+        columns: 2;
+        column-gap: 24pt;
+        padding-left: 18pt;
+        margin: 6pt 0;
+      }
+      .toc li {
+        margin: 2pt 0;
+        break-inside: avoid;
+      }
+      .pb {
+        page-break-before: always;
+        break-before: page;
+      }
+      ul,
+      ol {
+        margin: 4pt 0 8pt;
+        padding-left: 20pt;
+      }
+      li {
+        margin: 2pt 0;
+      }
+      .two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12pt;
+        align-items: start;
+      }
+      .two figure {
+        margin: 6pt 0;
+      }
+      .footer-note {
+        margin-top: 24pt;
+        padding-top: 8pt;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 9.5pt;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ───────────────────────── COVER ───────────────────────── -->
+    <section class="cover">
+      <h1>Repo Radar</h1>
+      <p class="lead">Project Walkthrough — Part 1: Structure &amp; Architecture</p>
+      <p class="meta">
+        A dashboard to search GitHub repositories, track favourites, and monitor stars, open issues
+        and last-commit dates. Built as a Siemens senior front-end technical task.
+      </p>
+      <div class="stack">
+        <span>React 19</span><span>TypeScript</span><span>Redux Toolkit + RTK Query</span
+        ><span>MUI</span><span>Vite</span><span>Turborepo + pnpm</span><span>Vitest + MSW</span
+        ><span>Storybook</span><span>Vercel</span>
+      </div>
+      <figure>
+        <img src="screenshots/tracked-light.png" alt="Repo Radar tracked repositories view" />
+        <figcaption>
+          The Tracked view: stars chart, uniform repo cards, per-repo refresh and untrack.
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ───────────────────────── TOC ───────────────────────── -->
+    <section class="toc">
+      <h2>Contents</h2>
+      <ol>
+        <li>The big picture: a layered monorepo</li>
+        <li>Why split into packages at all?</li>
+        <li>The dependency graph — a strict DAG</li>
+        <li>
+          Package by package
+          <ul>
+            <li><code>core</code> — domain layer</li>
+            <li><code>store</code> — data layer</li>
+            <li><code>ui</code> — presentation layer</li>
+            <li><code>web</code> — composition layer</li>
+            <li>Shared tooling packages</li>
+          </ul>
+        </li>
+        <li>Why Turborepo + pnpm</li>
+        <li>How a request flows through the layers</li>
+        <li>Cheat-sheet of named patterns</li>
+      </ol>
+    </section>
+
+    <!-- ───────────────────────── 1 ───────────────────────── -->
+    <h2>1. The big picture: a layered monorepo</h2>
+    <pre><code>repo-radar/
+├── apps/
+│   └── web/                  ← the only deployable thing
+├── packages/
+│   ├── core/                 ← pure TypeScript, zero framework deps
+│   ├── store/                ← data layer (Redux Toolkit + RTK Query)
+│   ├── ui/                   ← presentational MUI components
+│   ├── eslint-config/        ← shared tooling config
+│   └── typescript-config/    ← shared tooling config
+├── turbo.json
+├── pnpm-workspace.yaml
+└── vercel.json</code></pre>
+
+    <div class="pattern">
+      <strong>Pattern: Monorepo with an <code>apps/</code> + <code>packages/</code> split</strong>
+      (the Turborepo convention). The rule is simple: <code>apps/</code> contains things you
+      <em>deploy</em>; <code>packages/</code> contains things you <em>import</em>.
+    </div>
+    <p>
+      There is exactly one app today, but the shape lets you add <code>apps/storybook-site</code>,
+      <code>apps/mobile</code>, or <code>apps/api</code> later without reshuffling anything.
+    </p>
+
+    <!-- ───────────────────────── 2 ───────────────────────── -->
+    <h2>2. Why split into packages at all?</h2>
+    <p>
+      The brief said reviewers would judge
+      <em>“monorepo structure and separation of concerns”</em> and
+      <em>“reusable/shared components and packages.”</em> A single <code>src/</code> folder with
+      subfolders technically works, but
+      <strong>package boundaries are enforced by the tooling, not by convention</strong>:
+    </p>
+    <ul>
+      <li>
+        If <code>ui</code> tries to <code>import { useAppSelector } from '@repo-radar/store'</code>,
+        it fails — <code>store</code> isn’t in <code>ui</code>’s
+        <code>package.json</code> dependencies. A folder split can’t stop that; a package split
+        does.
+      </li>
+      <li>
+        Each package has its own <code>tsconfig</code>, <code>eslint.config</code> and tests, and
+        can be type-checked / tested / cached <strong>independently</strong> by Turborepo.
+      </li>
+    </ul>
+    <div class="pattern">
+      <strong>Pattern: Enforced module boundaries</strong> (a.k.a. “package-based architecture” or
+      “modular monolith”). The point is making the wrong import <em>impossible</em> rather than
+      merely discouraged.
+    </div>
+
+    <!-- ───────────────────────── 3 ───────────────────────── -->
+    <h2>3. The dependency graph — a strict DAG</h2>
+    <div class="mermaid">
+      graph TD core["@repo-radar/core<br /><small>types · mappers · utils</small>"]
+      ui["@repo-radar/ui<br /><small>MUI components · theme · Storybook</small>"]
+      store["@repo-radar/store<br /><small>RTK Query · slices · persistence</small>"]
+      web["apps/web<br /><small>routes · providers · features</small>"] core --> ui core --> store
+      ui --> web store --> web core --> web classDef c fill:#ddf4ff,stroke:#1f6feb,color:#0b3d91;
+      classDef w fill:#fff8c5,stroke:#d4a72c,color:#3d2e00; class core,ui,store c; class web w;
+    </div>
+    <p>
+      Dependencies flow in <strong>one direction only</strong>: <code>core</code> knows nothing,
+      <code>store</code> and <code>ui</code> know only <code>core</code>, and <code>web</code> knows
+      everything. <code>store</code> and <code>ui</code> are <strong>siblings</strong> that never
+      import each other.
+    </p>
+    <div class="pattern">
+      <strong>Pattern: Directed Acyclic Graph (DAG) of dependencies / the Dependency Rule</strong> —
+      from Clean Architecture:
+      <em>“source code dependencies must point only inward toward higher-level policies.”</em>
+      <code>core</code> is the innermost ring.
+    </div>
+    <p>
+      Why does <code>ui</code> not depend on <code>store</code>? Because that is what makes
+      <code>ui</code> <strong>reusable</strong>. <code>RepoCard</code> doesn’t know Redux exists —
+      it takes <code>repo</code>, <code>isLoading</code>, <code>onRefresh</code> as props. You can
+      render it in Storybook with fake data, test it without a store, or drop it into a Next.js app
+      using a totally different state library.
+    </p>
+    <figure>
+      <img
+        src="screenshots/storybook.png"
+        alt="RepoCard rendered in Storybook in its error state"
+      />
+      <figcaption>
+        Proof of decoupling: <code>RepoCard</code> renders every state (Default, Tracked, Loading,
+        Refreshing, With Error, Stale With Error, No Description) in Storybook with no Redux store
+        and no network.
+      </figcaption>
+    </figure>
+
+    <!-- ───────────────────────── 4 ───────────────────────── -->
+    <h2 class="pb">4. Package by package</h2>
+
+    <h3>4.1 <code>packages/core</code> — the domain layer</h3>
+    <pre><code>core/src/
+├── constants.ts          # API base URL, debounce ms, storage keys, schema version
+├── types/
+│   ├── github.ts         # GitHubRepoDto, GitHubSearchResponseDto (raw API, snake_case)
+│   └── domain.ts         # Repo, TrackedRepo, RateLimitInfo, ThemeMode (ours, camelCase)
+├── mappers/repo.ts       # toRepo(dto), toRepoSearchResult(dto), toTrackedRepo(repo)
+└── utils/
+    ├── format.ts         # formatCompactNumber, formatRelativeDate, formatCountdown
+    ├── storage.ts        # loadFromStorage / saveToStorage with versioned envelope
+    └── guards.ts         # isTrackedRepo, isTrackedRepoList, isThemeMode (runtime checks)</code></pre>
+    <p>
+      Zero dependencies on React, Redux or MUI. It runs in Node, in the browser, in a test —
+      anywhere. Three named patterns live here.
+    </p>
+
+    <h4>a) DTO vs Domain Model, joined by a Mapper</h4>
+    <div class="mermaid">
+      flowchart LR A["GitHub JSON<br /><code>stargazers_count</code><br /><code>pushed_at</code
+      ><br /><code>owner.avatar_url</code>"] M["toRepo(dto)<br /><small>mappers/repo.ts</small>"]
+      B["Repo (domain)<br /><code>stars</code><br /><code>lastCommitAt</code><br /><code
+        >owner.avatarUrl</code
+      >"] UI["ui · store · web<br /><small>never see snake_case</small>"] A --> M --> B --> UI
+      classDef ext fill:#ffebe9,stroke:#cf222e,color:#82071e; classDef dom
+      fill:#dafbe1,stroke:#1a7f37,color:#0f5323; class A ext; class B,UI dom;
+    </div>
+    <p>
+      <code>GitHubRepoDto</code> is <em>their</em> shape. <code>Repo</code> is <em>our</em> shape,
+      containing only fields we actually use. The mapper translates once, at the boundary.
+    </p>
+    <ul>
+      <li>If GitHub renames a field, one file changes.</li>
+      <li>If you swap to GraphQL or a backend proxy, the entire UI is untouched.</li>
+      <li>UI, tests and stories all work with the clean domain type.</li>
+    </ul>
+    <div class="pattern">
+      <strong>Pattern: Anti-Corruption Layer</strong> (Domain-Driven Design). You don’t let an
+      external system’s model leak into yours.
+    </div>
+
+    <h4>b) Runtime type guards at system boundaries</h4>
+    <p>
+      TypeScript types vanish at runtime. Data from <code>localStorage</code> is
+      <code>unknown</code> — it could be corrupt, from an old version, or hand-edited.
+      <code>isTrackedRepoList(value): value is TrackedRepo[]</code> checks the shape at runtime and
+      TypeScript narrows the type when it returns <code>true</code>.
+    </p>
+    <div class="tip">
+      Rule of thumb: <strong>validate at system boundaries</strong> (network, storage, URL params);
+      trust types internally.
+    </div>
+
+    <h4>c) Versioned storage envelope</h4>
+    <pre><code>{ "version": 1, "data": [ { "id": 32215970, "fullName": "mobxjs/mobx", ... } ] }</code></pre>
+    <p>
+      On load, if <code>version</code> doesn’t match or the guard rejects <code>data</code>, the
+      entry is wiped and the app starts clean instead of crashing.
+    </p>
+    <div class="pattern">
+      <strong>Pattern: Schema versioning / lightweight migration strategy.</strong> Bump the version
+      whenever the persisted shape changes.
+    </div>
+
+    <!-- ───────── store ───────── -->
+    <h3 class="pb">4.2 <code>packages/store</code> — the data layer</h3>
+    <pre><code>store/src/
+├── api/
+│   ├── baseQuery.ts          # wraps fetchBaseQuery: token, rate-limit headers, error normalisation
+│   ├── githubApi.ts          # createApi: searchRepositories, getRepo
+│   ├── apiError.ts           # ApiError + toApiError(): 403/429→rate-limit, 404→not-found, …
+│   └── rateLimitHeaders.ts   # parse x-ratelimit-* headers
+├── slices/
+│   ├── trackedReposSlice.ts  # createEntityAdapter — what the user tracks
+│   ├── authSlice.ts          # optional PAT
+│   ├── settingsSlice.ts      # theme mode
+│   └── rateLimitSlice.ts     # per-resource budget (core vs search)
+├── persistence/
+│   ├── persistenceMiddleware.ts  # listener middleware → storage on specific actions
+│   └── storage.ts                # loadPersistedState / persist* helpers
+├── thunks/refreshAllTrackedRepos.ts
+├── rootReducer.ts
+├── store.ts                  # createAppStore({ storage, persist, preloadedState })
+├── selectors.ts
+├── hooks.ts                  # useAppDispatch / useAppSelector (typed)
+└── index.ts                  # public API — the ONLY thing other packages import</code></pre>
+
+    <h4>a) Server state vs client state</h4>
+    <div class="mermaid">
+      flowchart TB subgraph S["Server state — RTK Query"] direction LR s1["getRepo('mobxjs/mobx')"]
+      s2["getRepo('TanStack/query')"] s3["searchRepositories({query})"] end subgraph C["Client state
+      — plain slices"] direction LR c1["trackedRepos<br /><small>ids + entities</small>"]
+      c2["auth.token"] c3["settings.themeMode"] c4["rateLimit.core / .search"] end classDef srv
+      fill:#ddf4ff,stroke:#1f6feb,color:#0b3d91; classDef cli
+      fill:#fbefff,stroke:#8250df,color:#3e1f7a; class s1,s2,s3 srv; class c1,c2,c3,c4 cli;
+    </div>
+    <p>
+      This is the most important conceptual split in modern React apps. <em>Server state</em> (repo
+      data) is cached, has loading/error states, goes stale, needs refetching.
+      <em>Client state</em> (what I track, my theme, my token) is owned by the user and has none of
+      those concerns. RTK Query handles the first; plain slices handle the second. Copying fetched
+      data into a slice is a classic anti-pattern that produces stale-data bugs.
+    </p>
+
+    <h4>b) Normalised state with <code>createEntityAdapter</code></h4>
+    <pre><code>trackedRepos: {
+  ids: [32215970, 207645083, 234898203],
+  entities: {
+    32215970:  { id: 32215970,  fullName: "mobxjs/mobx",    ... },
+    207645083: { id: 207645083, fullName: "TanStack/query", ... },
+    ...
+  }
+}</code></pre>
+    <p>
+      A normalised shape — like a database table with a primary key.
+      <code>selectIsTracked(id)</code> is an O(1) object lookup rather than an O(n)
+      <code>array.find</code>. The adapter also provides
+      <code>addOne / removeOne / setAll</code> reducers and memoised selectors for free.
+    </p>
+
+    <h4>c) Store factory instead of a singleton</h4>
+    <p>
+      <code>createAppStore()</code> is a <em>function</em>, not a pre-built
+      <code>export const store</code>. Tests create a fresh, isolated store per test with an
+      in-memory storage adapter; the app calls it once in <code>apps/web/src/app/store.ts</code>.
+    </p>
+    <div class="pattern">
+      <strong>Pattern: Factory function + Dependency Injection.</strong> The
+      <code>StorageAdapter</code> is injected, so persistence is testable without touching real
+      <code>localStorage</code>.
+    </div>
+
+    <h4>d) Facade via the <code>index.ts</code> barrel</h4>
+    <p>
+      Only what’s exported from <code>store/src/index.ts</code> is public.
+      <code>rootReducer.ts</code>, <code>baseQuery.ts</code> etc. are implementation details.
+    </p>
+    <div class="pattern">
+      <strong>Pattern: Facade</strong> at package level — consumers get a small, stable surface
+      area.
+    </div>
+
+    <h4>e) Side effects via <code>createListenerMiddleware</code></h4>
+    <div class="mermaid">
+      sequenceDiagram participant UI as TrackedRepoCard participant R as trackedReposSlice
+      participant L as Listener middleware participant LS as localStorage UI->>R:
+      dispatch(repoUntracked(id)) R-->>R: pure reducer updates state R->>L: action observed L->>LS:
+      saveToStorage({version:1, data:[...]})
+    </div>
+    <p>
+      Persistence doesn’t live inside reducers (reducers must be pure). A listener says “when
+      <code>repoTracked</code>, <code>repoUntracked</code> or <code>allReposUntracked</code> fires,
+      write the list to storage.” “What changed” stays separate from “what to do about it.”
+    </p>
+    <div class="pattern">
+      <strong>Pattern: Listener / effect middleware</strong> — a lightweight saga-style side-effect
+      layer.
+    </div>
+
+    <!-- ───────── ui ───────── -->
+    <h3 class="pb">4.3 <code>packages/ui</code> — the presentation layer</h3>
+    <pre><code>ui/src/
+├── theme/
+│   ├── createAppTheme.ts     # MUI theme factory (light | dark)
+│   └── AppThemeProvider.tsx
+├── components/
+│   ├── RepoCard/             # RepoCard.tsx + .test.tsx + .stories.tsx
+│   ├── SearchBar/
+│   ├── StarsBarChart/
+│   ├── RateLimitIndicator/
+│   ├── TokenDialog/
+│   └── EmptyState/ ErrorBanner/ RepoGrid/ StatChip/ RepoStatsRow/ ThemeToggle/ AppShell/
+└── index.ts</code></pre>
+
+    <div class="two">
+      <figure>
+        <img src="screenshots/repo-card.png" alt="RepoCard component" />
+        <figcaption>
+          <code>RepoCard</code> — stars, open issues, last commit, language, refresh + track
+          actions.
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/token-dialog.png" alt="TokenDialog component" />
+        <figcaption>
+          <code>TokenDialog</code> — opt-in personal access token, stored only in the user’s
+          browser.
+        </figcaption>
+      </figure>
+    </div>
+
+    <h4>a) Presentational vs Container components</h4>
+    <p>
+      Every component in <code>ui</code> is <em>presentational</em>: it receives data and callbacks
+      via props and has no idea where they come from. The <em>containers</em> live in
+      <code>apps/web/src/features/</code> — <code>TrackedRepoCard</code> calls
+      <code>useGetRepoQuery</code> and passes the result into <code>RepoCard</code>.
+    </p>
+    <div class="pattern">
+      <strong>Pattern: Presentational and Container Components</strong> (Dan Abramov) — in modern
+      terms, “dumb components + smart hooks.”
+    </div>
+
+    <h4>b) Co-location</h4>
+    <p>
+      <code>RepoCard.tsx</code>, <code>RepoCard.test.tsx</code> and
+      <code>RepoCard.stories.tsx</code> sit in one folder. Change the component and its test and
+      story are right there; delete the folder and everything related goes with it.
+    </p>
+    <div class="pattern"><strong>Pattern: Component-folder co-location.</strong></div>
+
+    <h4>c) Theming and a uniform grid</h4>
+    <p>
+      <code>createAppTheme(mode)</code> is the single source of colours, radii and typography. Cards
+      are forced to identical dimensions (<code>width: 100%</code>, <code>height: 100%</code>, fixed
+      two-line description, always-present footer) so the grid reads as a consistent system
+      regardless of content length.
+    </p>
+    <figure>
+      <img src="screenshots/tracked-dark.png" alt="Tracked view in dark mode" />
+      <figcaption>
+        The same components under the dark theme — one theme factory, zero component changes.
+      </figcaption>
+    </figure>
+
+    <!-- ───────── web ───────── -->
+    <h3 class="pb">4.4 <code>apps/web</code> — the composition layer</h3>
+    <pre><code>web/src/
+├── main.tsx                  # ReactDOM root
+├── App.tsx                   # AppShell + lazy Routes
+├── app/
+│   ├── AppProviders.tsx      # Redux Provider → Theme → ErrorBoundary
+│   ├── store.ts              # the single app store instance
+│   └── routes.ts
+├── components/ErrorBoundary.tsx · NavTabs.tsx
+├── features/                 # ← the key folder
+│   ├── search/               # SearchPage, SearchResultCard
+│   ├── tracked/              # TrackedPage, TrackedRepoCard, RefreshAllButton, TrackedStarsChart
+│   ├── settings/             # TokenSettings
+│   ├── rate-limit/           # RateLimitBadge
+│   └── theme/                # ThemeModeToggle
+├── hooks/                    # useDebouncedValue, useTrackToggle
+└── lib/toUserMessage.ts      # ApiError → human-readable copy</code></pre>
+
+    <h4>a) Feature-based folders</h4>
+    <p>
+      Instead of grouping by <em>type</em> (<code>components/</code>, <code>hooks/</code>,
+      <code>containers/</code>), code is grouped by <em>feature</em> (<code>search/</code>,
+      <code>tracked/</code>). Everything about the Tracked page is in one folder. Adding a feature
+      adds a folder; removing one removes a folder.
+    </p>
+    <div class="pattern">
+      <strong>Pattern: Feature-based structure / vertical slicing</strong> — the core idea behind
+      Feature-Sliced Design and the “bulletproof-react” layout.
+    </div>
+
+    <div class="two">
+      <figure>
+        <img src="screenshots/search-results.png" alt="Search page with results" />
+        <figcaption>
+          <code>features/search</code> — debounced search, load-more pagination.
+        </figcaption>
+      </figure>
+      <figure>
+        <img src="screenshots/search-empty.png" alt="Search page empty state" />
+        <figcaption>Explicit empty state before a query reaches the minimum length.</figcaption>
+      </figure>
+    </div>
+
+    <h4>b) Thin containers</h4>
+    <p>
+      Feature components are deliberately small — usually one hook call plus one
+      <code>ui</code> component. <code>TrackedRepoCard</code> is ~20 lines: call
+      <code>useGetRepoQuery</code>, map the result to <code>RepoCard</code> props. Logic lives in
+      <code>store</code>; rendering lives in <code>ui</code>; <code>web</code> just plugs them
+      together.
+    </p>
+    <div class="tip">
+      If <code>web</code> starts growing large components, that’s a smell that logic belongs in a
+      lower layer.
+    </div>
+
+    <h4>c) Route-based code splitting</h4>
+    <p>
+      <code>SearchPage</code> and <code>TrackedPage</code> are <code>React.lazy()</code> imports.
+      The ~300 kB charts library only downloads when someone visits <code>/tracked</code>; Vite
+      emits it as a separate chunk.
+    </p>
+    <figure class="narrow">
+      <img src="screenshots/stars-chart.png" alt="Stars per repository bar chart" />
+      <figcaption>
+        <code>StarsBarChart</code> reads straight from the RTK Query cache — no extra requests.
+      </figcaption>
+    </figure>
+
+    <h4>d) Composition Root</h4>
+    <p>
+      <code>AppProviders.tsx</code> is where every provider (Redux, MUI theme, error boundary) is
+      assembled — the one place that knows about all the layers. Everything below it is unaware of
+      the wiring.
+    </p>
+    <div class="pattern">
+      <strong>Pattern: Composition Root</strong> (Dependency-Injection terminology).
+    </div>
+
+    <h3>4.5 <code>eslint-config</code> &amp; <code>typescript-config</code></h3>
+    <p>
+      Shared tooling as packages. Every other package does
+      <code>"extends": "@repo-radar/typescript-config/react-library.json"</code>. Change a compiler
+      flag or lint rule once and it applies everywhere — the standard Turborepo pattern.
+    </p>
+
+    <!-- ───────────────────────── 5 ───────────────────────── -->
+    <h2 class="pb">5. Why Turborepo + pnpm</h2>
+    <ul>
+      <li>
+        <strong>pnpm workspaces</strong> — the <code>workspace:*</code> protocol links packages by
+        symlink. One <code>node_modules</code> at the root, no duplicate React copies (which would
+        break hooks).
+      </li>
+      <li>
+        <strong>Turborepo</strong> — builds the task graph from
+        <code>package.json</code> dependencies, runs tasks in parallel where possible, and
+        <strong>caches by content hash</strong>. Run <code>pnpm test</code> twice without changes
+        and the second run is instant. <code>dependsOn: ["^build"]</code> means “build my
+        dependencies first.”
+      </li>
+    </ul>
+    <div class="mermaid">
+      flowchart LR T["pnpm test"] --> turbo["Turborepo<br /><small
+        >hash inputs → cache hit / miss</small
+      >"] turbo --> c["core:test"] turbo --> s["store:test"] turbo --> u["ui:test"] turbo -->
+      w["web:test"] classDef t fill:#f6f8fa,stroke:#d0d7de; class c,s,u,w t;
+    </div>
+
+    <!-- ───────────────────────── 6 ───────────────────────── -->
+    <h2>6. How a request flows through the layers</h2>
+    <p>
+      Tracing one interaction — the user opens the Tracked page — shows every layer doing exactly
+      one job:
+    </p>
+    <div class="mermaid">
+      sequenceDiagram autonumber participant P as TrackedPage (web) participant C as TrackedRepoCard
+      (web) participant Q as githubApi.getRepo (store) participant B as baseQuery (store)
+      participant G as api.github.com participant M as toRepo (core) participant U as RepoCard (ui)
+      P->>C: render one card per tracked repo C->>Q: useGetRepoQuery("mobxjs/mobx") Q->>B: fetch
+      /repos/mobxjs/mobx B->>G: GET + Accept + optional Bearer G-->>B: 200 JSON + x-ratelimit-*
+      headers B-->>Q: data (or typed ApiError) B->>B: dispatch(rateLimitReceived) Q->>M:
+      transformResponse(dto) M-->>Q: Repo (domain) Q-->>C: { data, isLoading, isFetching, error,
+      refetch } C->>U: props only
+    </div>
+    <p>
+      Each tracked card owns its own cache entry, so <code>isLoading</code>, <code>error</code> and
+      <code>refetch()</code> are isolated per repo with zero custom bookkeeping — this is how the
+      “independent loading and error states per repo” requirement is satisfied for free.
+    </p>
+    <figure>
+      <img
+        src="screenshots/header.png"
+        alt="Header with rate-limit badge, token settings and theme toggle"
+      />
+      <figcaption>
+        Side-effect of the same flow: the <code>x-ratelimit-*</code> headers captured in
+        <code>baseQuery</code> drive the live <strong>API 39/60</strong> budget badge.
+      </figcaption>
+    </figure>
+
+    <!-- ───────────────────────── 7 ───────────────────────── -->
+    <h2 class="pb">7. Cheat-sheet of named patterns</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 42%">Pattern</th>
+          <th>Where it lives</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Monorepo, <code>apps/</code> + <code>packages/</code> split</td>
+          <td>repo root</td>
+        </tr>
+        <tr>
+          <td>Enforced module boundaries / modular monolith</td>
+          <td><code>package.json</code> dependencies</td>
+        </tr>
+        <tr>
+          <td>Dependency Rule / acyclic dependency graph</td>
+          <td>core ← store, ui ← web</td>
+        </tr>
+        <tr>
+          <td>DTO → Domain Model via Mapper (Anti-Corruption Layer)</td>
+          <td><code>core/mappers</code></td>
+        </tr>
+        <tr>
+          <td>Runtime type guards at boundaries</td>
+          <td><code>core/utils/guards.ts</code></td>
+        </tr>
+        <tr>
+          <td>Versioned storage envelope (schema migration)</td>
+          <td><code>core/utils/storage.ts</code></td>
+        </tr>
+        <tr>
+          <td>Server state vs client state</td>
+          <td>RTK Query vs slices</td>
+        </tr>
+        <tr>
+          <td>Normalised state (<code>createEntityAdapter</code>)</td>
+          <td><code>trackedReposSlice</code></td>
+        </tr>
+        <tr>
+          <td>Factory + Dependency Injection</td>
+          <td><code>createAppStore({ storage })</code></td>
+        </tr>
+        <tr>
+          <td>Facade / barrel export</td>
+          <td>every <code>index.ts</code></td>
+        </tr>
+        <tr>
+          <td>Listener middleware for side effects</td>
+          <td><code>persistenceMiddleware</code></td>
+        </tr>
+        <tr>
+          <td>Presentational vs Container components</td>
+          <td><code>ui</code> vs <code>web/features</code></td>
+        </tr>
+        <tr>
+          <td>Co-location (component folder)</td>
+          <td><code>ui/components/*</code></td>
+        </tr>
+        <tr>
+          <td>Feature-based folders (vertical slicing)</td>
+          <td><code>web/features/*</code></td>
+        </tr>
+        <tr>
+          <td>Composition Root</td>
+          <td><code>AppProviders.tsx</code></td>
+        </tr>
+        <tr>
+          <td>Route-based code splitting</td>
+          <td><code>App.tsx</code> lazy routes</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="footer-note">
+      Part 1 of the Repo Radar walkthrough. Upcoming parts: (2) the data layer in depth — RTK Query
+      internals, the base query, error normalisation, refresh-all; (3) UI layer and theming; (4)
+      testing strategy; (5) tooling, CI and deployment.
+    </p>
+
+    <script>
+      mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
+    </script>
+  </body>
+</html>
